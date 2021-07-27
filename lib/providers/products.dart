@@ -47,6 +47,11 @@ class Products with ChangeNotifier {
     ]; //returns a copy of items, and not a reference to the object
   }
 
+
+  List<Product> get filteredItems {
+    return _items.where((element) => element.isFavorite).toList();
+  }
+
   Product findById(String id)
   {
     return _items.firstWhere((product) => product.id == id);
