@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../models/product.dart';
-
+import 'product.dart';
+//used mixins to allow the class to use ChangeNotifier functionalities
 class Products with ChangeNotifier {
   List<Product> _items = [
     Product(
@@ -38,10 +38,18 @@ class Products with ChangeNotifier {
     )
   ];
 
+  //_items must be private and only changable through this classes methods so it can notify listeners
+  //of the changes made...
+  //that why we return a copy of the instance so it can't be changed 
   List<Product> get items {
     return [
       ..._items
     ]; //returns a copy of items, and not a reference to the object
+  }
+
+  Product findById(String id)
+  {
+    return _items.firstWhere((product) => product.id == id);
   }
 
   void addProduct() {

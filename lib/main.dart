@@ -12,6 +12,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     //trun this class into a provider
     return ChangeNotifierProvider(
+      //when creating new object use create, when using a 
+      //pre-initialized object we use ChangeNotifierProvider.value
       create: (ctx) => Products(),
       child: MaterialApp(
         title: 'MyShop',

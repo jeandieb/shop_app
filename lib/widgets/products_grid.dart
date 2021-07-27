@@ -3,11 +3,12 @@ import 'package:provider/provider.dart';
 
 import '../providers/products.dart';
 import 'product_item.dart';
-import '../models/product.dart';
+import '../providers/product.dart';
 
 class ProductsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    //fetch data from the provider class
     final productsData = Provider.of<Products>(context);
     final products = productsData.items;
     return GridView.builder(
@@ -19,10 +20,19 @@ class ProductsGrid extends StatelessWidget {
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
-      itemBuilder: (context, index) => ProductItem(
-        products[index].id,
-        products[index].title,
-        products[index].imageUrl,
+      //change this build method to a provider (like we did in main)
+      //the right way to use provider in a list view or grid view,
+      //it allows us to avoid bugs due to Flutter recycling invisible widgets
+      itemBuilder: (context, index) => ChangeNotifierProvider.value(
+        value: products[index],
+        //create: (context) => products[index],
+        child:
+            //we no longer need to pass data using the constructor we can get the Product from the provider
+            ProductItem(
+                // products[index].id,
+                // products[index].title,
+                // products[index].imageUrl,
+                ),
       ),
     );
   }
