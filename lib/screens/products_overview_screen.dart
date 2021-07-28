@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../providers/product.dart';
-import '../widgets/product_item.dart';
+
 import '../widgets/products_grid.dart';
+import '../widgets/badge.dart';
+import './cart_screen.dart';
+import '../providers/cart.dart';
 
 enum ItemsFilter { FAVORITE, ALL }
 
@@ -19,6 +22,20 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
     return Scaffold(
       appBar: AppBar(
         actions: [
+          Consumer<Cart>(
+            //this is ch that will be passed to builder
+            child: IconButton(
+              icon: Icon(Icons.shopping_cart),
+              onPressed: () {
+                Navigator.of(context).pushNamed(CartScreen.routeName);
+              },
+            ),
+            builder: (context, cart, ch) => Badge(
+              child: ch,
+              value: cart.numProducts.toString(),
+            ),
+          ),
+
           PopupMenuButton(
             icon: Icon(Icons.more_vert),
             onSelected: (value) {

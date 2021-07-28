@@ -17,10 +17,22 @@ class CartItem {
 class Cart with ChangeNotifier {
   //map that will map product id to a cart item instance
   //note that prodcut id and cart item id are two different ids
-  Map<String, CartItem> _items;
+  Map<String, CartItem> _items = {};
 
-  Map<String, CartItem> get ItemsFilter {
+  Map<String, CartItem> get items {
     return {..._items};
+  }
+
+  int get numProducts {
+    return _items.length;
+  }
+
+  double get getTotal {
+    double total = 0.0;
+    _items.forEach((key, value) {
+      total += value.price * value.quantity;
+    });
+    return total;
   }
 
   void addItemToCart(String productId, double price, String title) {
@@ -33,8 +45,7 @@ class Cart with ChangeNotifier {
           quantity: existingProduct.quantity + 1,
         );
       });
-    } 
-    else {
+    } else {
       _items.putIfAbsent(
           productId,
           () => CartItem(
@@ -44,5 +55,12 @@ class Cart with ChangeNotifier {
                 quantity: 1,
               ));
     }
+
+    notifyListeners();
+  }
+
+  void removeItemFromCart(String id){
+    _items.remove(id);
+    notifyListeners();
   }
 }
