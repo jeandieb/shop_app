@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_complete_guide/screens/orders_screen.dart';
 import 'package:provider/provider.dart';
 
 //we now have two classes called CartItem
-//use 'as' to distinguis between them 
+//use 'as' to distinguis between them
 //another solution would be to not import CartItem from providers/cart.dart
 //because we do not need it in here, so we can import Cart only using the following command
 //import '../providers/cart.dart' show Cart;
 import '../providers/cart.dart';
 import '../widgets/cart_item.dart' as ct;
+import '../providers/orders.dart';
 
 class CartScreen extends StatelessWidget {
   static const String routeName = '/cart';
@@ -38,7 +40,13 @@ class CartScreen extends StatelessWidget {
                       ),
                       backgroundColor: Theme.of(context).primaryColor,
                     ),
-                    TextButton(onPressed: () {}, child: Text('ORDER NOW'))
+                    TextButton(
+                        onPressed: () {
+                          Provider.of<Orders>(context, listen: false).addOrder(
+                              cart.items.values.toList(), cart.getTotal);
+                          cart.clearCart();
+                        },
+                        child: Text('ORDER NOW'))
                   ],
                 ),
               )),

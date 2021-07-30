@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_complete_guide/screens/products_overview_screen.dart';
 
 class CartItem {
   @required
@@ -61,6 +60,12 @@ class Cart with ChangeNotifier {
 
   void removeItemFromCart(String id){
     _items.remove(id);
+    notifyListeners();
+  }
+
+  void clearCart ()
+  {
+    _items = {};
     notifyListeners();
   }
 }
