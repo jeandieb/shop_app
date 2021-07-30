@@ -28,15 +28,15 @@ class ProductItem extends StatelessWidget {
         footer: GridTileBar(
           backgroundColor: Colors.black54,
           //consumer allows us to listen to changes in provider only in part of the widget
-          //will not reun all build when changes are noticed, only the wrapped part 
+          //will not reun all build when changes are noticed, only the wrapped part
           leading: Consumer<Product>(
-            //use child if there is parts inside the wrapped part that you don't want to update 
+            //use child if there is parts inside the wrapped part that you don't want to update
             //when something changes, like a text widget... not used in this examples,
             //Demoed at the end of lecture 198
             builder: (ctx, product, child) => IconButton(
               icon: Icon(
-                product.isFavorite? Icons.favorite : Icons.favorite_border,
-                color:  Theme.of(context).accentColor,
+                product.isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: Theme.of(context).accentColor,
               ),
               onPressed: () {
                 product.toggleFavoriteStatus();
@@ -50,6 +50,15 @@ class ProductItem extends StatelessWidget {
             ),
             onPressed: () {
               cart.addItemToCart(product.id, product.price, product.title);
+              //Scaffold.of(context).showSnackBar(SnackBar(content: Text('Added to Cart')));
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('Added to Cart'),
+                duration: Duration(seconds: 2),
+                action: SnackBarAction(label: 'UNDO', onPressed: () {
+                  cart.removeSingleItem(product.id);
+                },),
+              ));
             },
           ),
           title: Text(
