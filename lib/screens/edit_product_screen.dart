@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../providers/product.dart';
+import '../providers/products.dart';
 
 class EditProductScreen extends StatefulWidget {
   static const String routeName = '/edit_Product';
@@ -22,6 +24,16 @@ class _EditProductScreenState extends State<EditProductScreen> {
   Product _editedProduct =
       Product(id: null, title: '', description: '', price: 0.0, imageUrl: '');
 
+  //used to make did Change execute only once
+  var _isInit = true;
+
+  var _initValues = {
+    'title': '',
+    'description': '',
+    'price': '',
+    'imageUrl': '',
+  };
+
   @override
   void initState() {
     //add listenr to the focus node to listen on changes in focus
@@ -30,14 +42,43 @@ class _EditProductScreenState extends State<EditProductScreen> {
     super.initState();
   }
 
+  @override //runs before build is executed
+  void didChangeDependencies() {
+    if (_isInit) {
+      final String productId =
+          ModalRoute.of(context).settings.arguments as String;
+      if (productId != null) {
+        _editedProduct =
+            Provider.of<Products>(context, listen: false).findById(productId);
+        _initValues = {
+          'title': _editedProduct.title,
+          'description': _editedProduct.description,
+          'price': _editedProduct.price.toString(),
+          //'imageUrl': _editedProduct.imageUrl,
+          'imageUrl': '',
+        };
+        _imageUrlController.text = _editedProduct.imageUrl;
+      }
+    }
+    _isInit = false;
+    super.didChangeDependencies();
+  }
+
   void _saveForm() {
     bool isValid = _form.currentState.validate();
     if (isValid) {
       _form.currentState.save();
-      print(_editedProduct.title);
-      print(_editedProduct.description);
-      print(_editedProduct.price);
-      print(_editedProduct.imageUrl);
+      if (_editedProduct.id !=
+          null) // edit existing product if its id is not null (it exists --> edit it)
+      {
+        Provider.of<Products>(context, listen: false)
+            .updateProduct(_editedProduct.id, _editedProduct);
+      } else {
+        //is not in the list of product --> add it
+        Provider.of<Products>(context, listen: false)
+            .addProduct(_editedProduct);
+      }
+      Navigator.of(context).pop();
     }
   }
 
@@ -60,9 +101,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
               _imageUrlController.text.startsWith('https')) ||
           (!_imageUrlController.text.endsWith('.png') &&
               !_imageUrlController.text.endsWith('.jpg') &&
-              !_imageUrlController.text.endsWith('jpeg')))
-              return;
-    setState(() {});
+              !_imageUrlController.text.endsWith('jpeg'))) return;
+      setState(() {});
     }
   }
 
@@ -83,12 +123,14 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     SingleChildScrollView(
                   child: Column(children: [
                     TextFormField(
+                      initialValue: _initValues['title'],
                       decoration: InputDecoration(labelText: 'Title'),
                       textInputAction: TextInputAction.next,
                       onFieldSubmitted: (_) =>
                           FocusScope.of(context).requestFocus(_priceFocusNode),
                       onSaved: (newValue) => _editedProduct = new Product(
-                          id: null,
+                          id: _editedProduct.id,
+                          isFavorite: _editedProduct.isFavorite,
                           title: newValue,
                           description: _editedProduct.description,
                           price: _editedProduct.price,
@@ -101,6 +143,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       },
                     ),
                     TextFormField(
+                      initialValue: _initValues['price'],
                       decoration: InputDecoration(labelText: 'Price'),
                       textInputAction: TextInputAction.next,
                       keyboardType: TextInputType.number,
@@ -108,7 +151,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       onFieldSubmitted: (_) => FocusScope.of(context)
                           .requestFocus(_descriptionFocusNode),
                       onSaved: (newValue) => _editedProduct = new Product(
-                          id: null,
+                          id: _editedProduct.id,
+                          isFavorite: _editedProduct.isFavorite,
                           title: _editedProduct.title,
                           description: _editedProduct.description,
                           price: double.parse(newValue),
@@ -123,6 +167,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       },
                     ),
                     TextFormField(
+                      initialValue: _initValues['description'],
                       decoration: InputDecoration(labelText: 'Description'),
                       //textInputAction: TextInputAction.next,
                       maxLines:
@@ -131,7 +176,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       focusNode: _descriptionFocusNode,
 
                       onSaved: (newValue) => _editedProduct = new Product(
-                          id: null,
+                          id: _editedProduct.id,
+                          isFavorite: _editedProduct.isFavorite,
                           title: _editedProduct.title,
                           description: newValue,
                           price: _editedProduct.price,
@@ -162,12 +208,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                   )),
                         Expanded(
                           child: TextFormField(
+                            //CAN'T USE CONTROLLER AND INITIAL VALUE
+                            //initialValue: _initValues['imageUrl'],
                             decoration: InputDecoration(labelText: 'Image URL'),
                             keyboardType: TextInputType.url,
                             controller: _imageUrlController,
                             focusNode: _imageUrlFocusNode,
                             onSaved: (newValue) => _editedProduct = new Product(
-                                id: null,
+                                id: _editedProduct.id,
+                                isFavorite: _editedProduct.isFavorite,
                                 title: _editedProduct.title,
                                 description: _editedProduct.description,
                                 price: _editedProduct.price,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'product.dart';
+
 //used mixins to allow the class to use ChangeNotifier functionalities
 class Products with ChangeNotifier {
   List<Product> _items = [
@@ -37,28 +38,54 @@ class Products with ChangeNotifier {
           'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
     )
   ];
-
   //_items must be private and only changable through this classes methods so it can notify listeners
+
   //of the changes made...
-  //that why we return a copy of the instance so it can't be changed 
+  //that why we return a copy of the instance so it can't be changed
   List<Product> get items {
     return [
       ..._items
     ]; //returns a copy of items, and not a reference to the object
   }
 
-
   List<Product> get filteredItems {
     return _items.where((element) => element.isFavorite).toList();
   }
 
-  Product findById(String id)
-  {
+  Product findById(String id) {
     return _items.firstWhere((product) => product.id == id);
   }
 
-  void addProduct() {
-    //_items.add(value);
+  void addProduct(Product newProduct) {
+    Product toBeAdded = Product(
+        title: newProduct.title,
+        price: newProduct.price,
+        description: newProduct.description,
+        imageUrl: newProduct.imageUrl,
+        id: DateTime.now().toString());
+    _items.add(toBeAdded);
     notifyListeners();
   }
+
+  void updateProduct(String id, Product newProduct)
+  {
+    final prodIndex = _items.indexWhere((prod) => prod.id == id);
+    if(prodIndex >= 0 )
+    {
+      _items[prodIndex] = newProduct;
+      notifyListeners();
+    }
+    else{
+      print('...');
+    }
+  }
+
+
+  void deleteProduct(String id)
+  {
+    _items.removeWhere((prod) => prod.id == id);
+    notifyListeners();
+  }
+
+
 }
