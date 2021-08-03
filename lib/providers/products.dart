@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'product.dart';
 
 //used mixins to allow the class to use ChangeNotifier functionalities
@@ -57,7 +59,15 @@ class Products with ChangeNotifier {
   }
 
   void addProduct(Product newProduct) {
-    Product toBeAdded = Product(
+    final url = Uri.parse('https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products.json');
+    http.post(url, body: json.encode( {
+      'title': newProduct.title,
+      'price': newProduct.price,
+      'description': newProduct.description,
+      'imageUrl': newProduct.imageUrl,
+      'isFavorite': newProduct.isFavorite
+    })).then((response) => print(json.decode(response.body)));
+    final Product toBeAdded = Product(
         title: newProduct.title,
         price: newProduct.price,
         description: newProduct.description,
