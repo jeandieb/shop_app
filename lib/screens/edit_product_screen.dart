@@ -119,12 +119,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
       });
       if (_editedProduct.id != null) {
         // edit existing product if its id is not null (it exists --> edit it)
-        Provider.of<Products>(context, listen: false)
+        await Provider.of<Products>(context, listen: false)
             .updateProduct(_editedProduct.id, _editedProduct);
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.of(context).pop();
       } else {
         //is not in the list of product --> add it
         try {
@@ -145,13 +141,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
               ],
             ),
           );
-        } finally {
-          setState(() {
-            _isLoading = false;
-          });
-          Navigator.of(context).pop();
-        }
+         } //finally {
+        //   setState(() {
+        //     _isLoading = false;
+        //   });
+        //   Navigator.of(context).pop();
+        // }
       }
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.of(context).pop();
     }
   }
 

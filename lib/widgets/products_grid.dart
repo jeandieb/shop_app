@@ -34,7 +34,7 @@ class ProductsGrid extends StatelessWidget {
         mainAxisSpacing: 10,
       ),
       //change this build method to a provider (like we did in main)
-      //the right way to use provider in a list view or grid view,
+      //.value is the right way to use provider in a list view or grid view,
       //it allows us to avoid bugs due to Flutter recycling invisible widgets
       itemBuilder: (context, index) => ChangeNotifierProvider.value(
         value: products[index],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_complete_guide/widgets/main_drawer.dart';
 import 'package:provider/provider.dart';
 
 import '../widgets/user_product_item.dart';
@@ -10,12 +11,12 @@ class UserProductsScreen extends StatelessWidget {
 
   Future<void> _refreshProducts(BuildContext context)  async
   {
-    await Provider.of<Products>(context).fetchAndSetProducts();
+    await Provider.of<Products>(context, listen: false).fetchAndSetProducts();
   }
 
   @override
   Widget build(BuildContext context) {
-    final productsData = Provider.of<Products>(context, listen: false);
+    final productsData = Provider.of<Products>(context, listen: true);
     return Scaffold(
       appBar: AppBar(
         title: Text('My Products'),
@@ -42,6 +43,7 @@ class UserProductsScreen extends StatelessWidget {
               }),
         ),
       ),
+      drawer: MainDrawer(),
     );
   }
 }

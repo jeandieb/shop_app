@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_complete_guide/models/http_exception.dart';
 import 'package:http/http.dart' as http;
 import 'product.dart';
 
@@ -124,9 +125,10 @@ class Products with ChangeNotifier {
         'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products.json');
     try {
       final response = await http.get(url);
-      print(json.decode(response.body));  //FireBase return Map<String, Map> for Products where String is the ID
-      final extractedData = json.decode(response.body)
-          as Map<String, dynamic>; //dart does not understand a Map with Map values
+      print(json.decode(response
+          .body)); //FireBase return Map<String, Map> for Products where String is the ID
+      final extractedData = json.decode(response.body) as Map<String,
+          dynamic>; //dart does not understand a Map with Map values
       final List<Product> loadedProducts = [];
       extractedData.forEach((prodId, productData) {
         loadedProducts.add(Product(
@@ -146,9 +148,34 @@ class Products with ChangeNotifier {
     }
   }
 
-  void updateProduct(String id, Product newProduct) {
+  //the logic is done in Product.dart 
+  // Future<void> updateProductFavorite(String id, Product prod) async {
+  //   final url = Uri.parse(
+  //       'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products/$id.json');
+
+  //   final response = await http.patch(url,
+  //       body: json.encode({'isFavorite': prod.isFavorite}));
+  //   if (response.statusCode >= 400) {
+  //     prod.toggleFavoriteStatus();
+  //     notifyListeners();
+  //     throw HttpException('Failed to change favorite');
+  //   }
+
+  //   notifyListeners();
+  // }
+
+  Future<void> updateProduct(String id, Product newProduct) async {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     if (prodIndex >= 0) {
+      final url = Uri.parse(
+          'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products/$id.json');
+      await http.patch(url,
+          body: json.encode({
+            'title': newProduct.title,
+            'description': newProduct.description,
+            'price': newProduct.price,
+            'imageUrl': newProduct.imageUrl,
+          }));
       _items[prodIndex] = newProduct;
       notifyListeners();
     } else {
@@ -156,8 +183,37 @@ class Products with ChangeNotifier {
     }
   }
 
-  void deleteProduct(String id) {
-    _items.removeWhere((prod) => prod.id == id);
+  Future<void> deleteProduct(String id) async {
+    final url = Uri.parse(
+        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products/$id.json');
+    final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
+    var existingProduct = _items[
+        existingProductIndex]; //remove product from _list but keep a copy of it
+    _items.removeAt(existingProductIndex);
     notifyListeners();
+    //on error we roll back delete locally
+    //this is called optimistic update
+
+    //for get and post http package throws an error when something go wrong (status code >= 400)
+    //it does not for delete so we have to throw our own error.
+    // http.delete(url).then((response) {
+    //   if(response.statusCode >= 400)
+    //   {
+    //     throw HttpException('Failed to delete');
+    //   }
+    //   existingProduct = null;
+    // }).catchError((_) {
+    //   _items.insert(existingProductIndex, existingProduct);
+    //   notifyListeners();
+    // });
+
+    //Same code as above but using async and await
+    final response = await http.delete(url);
+    if (response.statusCode >= 400) {
+      _items.insert(existingProductIndex, existingProduct);
+      notifyListeners();
+      throw HttpException('Failed to delete');
+    }
+    existingProduct = null;
   }
 }

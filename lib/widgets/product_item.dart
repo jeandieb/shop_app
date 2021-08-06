@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_complete_guide/providers/product.dart';
+import 'package:flutter_complete_guide/providers/products.dart';
 import 'package:provider/provider.dart';
 
 import '../screens/product_detail_screen.dart';
@@ -14,7 +15,8 @@ class ProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('product item rebuilt..');
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    //print('product item rebuilt..');
     final Product product = Provider.of<Product>(context, listen: false);
     final Cart cart = Provider.of<Cart>(context, listen: false);
     return ClipRRect(
@@ -38,8 +40,18 @@ class ProductItem extends StatelessWidget {
                 product.isFavorite ? Icons.favorite : Icons.favorite_border,
                 color: Theme.of(context).accentColor,
               ),
-              onPressed: () {
-                product.toggleFavoriteStatus();
+              onPressed: () async {
+                try {
+                  await product.toggleFavoriteStatus();
+                  //await Provider.of<Products>(context, listen: false).updateProductFavorite(product.id, product);
+                } catch (error) {
+                  scaffoldMessenger.hideCurrentSnackBar();
+                  scaffoldMessenger.showSnackBar(SnackBar(
+                      content: Text(
+                    error.toString(),
+                    textAlign: TextAlign.center,
+                  )));
+                }
               },
             ),
           ),
@@ -55,9 +67,12 @@ class ProductItem extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: Text('Added to Cart'),
                 duration: Duration(seconds: 2),
-                action: SnackBarAction(label: 'UNDO', onPressed: () {
-                  cart.removeSingleItem(product.id);
-                },),
+                action: SnackBarAction(
+                  label: 'UNDO',
+                  onPressed: () {
+                    cart.removeSingleItem(product.id);
+                  },
+                ),
               ));
             },
           ),
