@@ -5,22 +5,53 @@ import 'package:provider/provider.dart';
 import '../providers/orders.dart';
 import '../widgets/order_item.dart' as oiWidget;
 
-class OrdersScreen extends StatelessWidget {
-
+class OrdersScreen extends StatefulWidget {
   static const String routeName = '/orders_screen';
 
   @override
+  _OrdersScreenState createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends State<OrdersScreen> {
+  bool _isLoading = false;
+
+//Future builder can be used here to access the state of the future, wherther waiting or done
+//this can save us from 1) making this widget Stateful and keep it Stateless and managing _isLoading
+//on our own.. I did not implement it but it its in lecture 257
+
+  @override
+  void initState() {
+    // Future.delayed(Duration.zero).then((_) =>
+    //     Provider.of<Orders>(context, listen: false).fetchAndSetOrders());
+    //this works as long as listen: false
+    _isLoading = true;
+    Provider.of<Orders>(context, listen: false).fetchAndSetOrders().then((_) {
+      setState(() {
+        _isLoading = false;
+      });
+    });
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    List<OrderItem> ordersData =  Provider.of<Orders>(context, listen: true).orders;
+    List<OrderItem> ordersData =
+        Provider.of<Orders>(context, listen: true).orders;
     return Scaffold(
       drawer: MainDrawer(),
       appBar: AppBar(
         title: Text('My Orders'),
       ),
       body: Column(children: [
-        Expanded(child: ListView.builder(itemCount: ordersData.length ,itemBuilder: (context, index){
-          return oiWidget.OrderItem(index); //send the index only and get the order using provider
-        }))
+        Expanded(
+            child: _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: ordersData.length,
+                    itemBuilder: (context, index) {
+                      return oiWidget.OrderItem(
+                          index); //send the index only and get the order using provider
+                    }))
       ]),
     );
   }

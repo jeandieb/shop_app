@@ -125,11 +125,11 @@ class Products with ChangeNotifier {
         'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products.json');
     try {
       final response = await http.get(url);
-      print(json.decode(response
-          .body)); //FireBase return Map<String, Map> for Products where String is the ID
-      final extractedData = json.decode(response.body) as Map<String,
-          dynamic>; //dart does not understand a Map with Map values
+      //print(json.decode(response.body)); //FireBase return Map<String, Map> for Products where String is the ID
+      final extractedData = json.decode(response.body) as Map<String, dynamic>; //dart does not understand a Map with Map values
       final List<Product> loadedProducts = [];
+      if(extractedData == null) return;
+      
       extractedData.forEach((prodId, productData) {
         loadedProducts.add(Product(
             id: prodId,

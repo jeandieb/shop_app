@@ -32,11 +32,11 @@ class Orders with ChangeNotifier {
     return [..._orders];
   }
 
-  Future<void> addOrder(List<CartItem> cartProducts, double orderTotal) async{
+  Future<void> addOrder(List<CartItem> cartProducts, double orderTotal) async {
     final url = Uri.parse(
         'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/orders.json');
     final dateTime = DateTime.now();
-     final response = await http.post(url,
+    final response = await http.post(url,
         body: json.encode({
           'total': orderTotal,
           'dateTime': dateTime.toIso8601String(),
@@ -58,6 +58,39 @@ class Orders with ChangeNotifier {
         orderDate: DateTime.now(),
       ),
     );
+    notifyListeners();
+  }
+
+  Future<void> fetchAndSetOrders() async {
+    final url = Uri.parse(
+        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/orders.json');
+    final response = await http.get(url);
+    print(json.decode(response.body));
+    final List<OrderItem> loadedOrders = [];
+    final extractedData = json.decode(response.body) as Map<String, dynamic>;
+    if (extractedData == null) return;
+
+    extractedData.forEach((orderId, orderData) {
+      loadedOrders.add(
+        OrderItem(
+          id: orderId,
+          total: orderData['total'],
+          //parse here accept Iso8601 String format that why we set it in that format when sending to fire base
+          orderDate: DateTime.parse(orderData['dateTime']),
+          items: (orderData['products'] as List<dynamic>)
+              .map(
+                (cartItem) => CartItem(
+                    id: cartItem['id'],
+                    price: cartItem['price'],
+                    quantity: cartItem['quantity'],
+                    title: cartItem['title']),
+              )
+              .toList(),
+        ),
+      );
+    });
+    //to show the newest order on top of the page 
+    _orders = loadedOrders.reversed.toList();
     notifyListeners();
   }
 }
