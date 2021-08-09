@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_complete_guide/models/http_exception.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth.dart';
 
 enum AuthMode { Signup, Login }
 
@@ -114,7 +117,19 @@ class _AuthCardState extends State<AuthCard> {
     }
   }
 
-  void _submit() {
+  void _showErrorDialog(String errorMessage) {
+    showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+              title: Text('An Error Occurred..'),
+              content: Text(errorMessage),
+              actions: [TextButton(onPressed: (){
+                Navigator.of(context).pop();
+              }, child: Text('Okay'))],
+            ));
+  }
+
+  Future<void> _submit() async {
     if (!_formKey.currentState.validate()) {
       // Invalid!
       return;
@@ -123,10 +138,32 @@ class _AuthCardState extends State<AuthCard> {
     setState(() {
       _isLoading = true;
     });
-    if (_authMode == AuthMode.Login) {
-      // Log user in
-    } else {
-      // Sign user up
+    try {
+      if (_authMode == AuthMode.Login) {
+        // Log user in
+        await Provider.of<Auth>(context, listen: false)
+            .login(_authData['email'], _authData['password']);
+      } else {
+        // Sign user up
+        await Provider.of<Auth>(context, listen: false)
+            .singup(_authData['email'], _authData['password']);
+      }
+    } on HttpException catch (error) {
+      var errorMessage = 'Authentication failed';
+      if (error.toString().contains('EMAIL_EXISTS'))
+        errorMessage = 'This email address is already used';
+      if (error.toString().contains('INVALID_EMAIL'))
+        errorMessage = 'This is not a valid email address';
+      if (error.toString().contains('WEAK_PASSWORD'))
+        errorMessage = 'This password is too weak';
+      if (error.toString().contains('INVALID_PASSWORD'))
+        errorMessage = 'Wrong password';
+      _showErrorDialog(errorMessage);
+
+    } catch (error) {
+      const errorMessage =
+          'Could not authenticate you. Please try again later.';
+      _showErrorDialog(errorMessage);
     }
     setState(() {
       _isLoading = false;
@@ -186,29 +223,60 @@ class _AuthCardState extends State<AuthCard> {
                 },
               ),
             ),
-          Stack(children: [
-            Positioned.fill(
-                child: Container(
-                    decoration: BoxDecoration(boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  spreadRadius: 1,
-                  blurRadius: 6,
-                  offset: Offset(5, 8))
-            ], color: Colors.orange, shape: BoxShape.rectangle))),
-            TextButton(
-                //style: ButtonStyle(backgroundColor: Colors.deepOrange),
-                child: _authMode == AuthMode.Login
-                    ? Text(
-                        'Log In',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      )
-                    : Text(
-                        'Sign Up',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                onPressed: _submit),
-          ]),
+          // Stack(children: [
+          //   Positioned.fill(
+          //    child:
+          //     Container(
+          //       width: 200, height: 50,
+          //       decoration: BoxDecoration(border: Border.all(),
+          //           borderRadius: BorderRadius.circular(10),
+          //           boxShadow: [
+          //             BoxShadow(
+          //                 color: Colors.black.withOpacity(0.5),
+          //                 spreadRadius: 1,
+          //                 blurRadius: 6,
+          //                 offset: Offset(5, 8))
+          //           ],
+          //           color: Colors.orange,
+          //           shape: BoxShape.rectangle),
+          //     ),
+          //  ),
+          //   _isLoading
+          //       ? Center(child: CircularProgressIndicator())
+          //       : TextButton(
+          //           //style: ButtonStyle(backgroundColor: Colors.deepOrange),
+          //           child: _authMode == AuthMode.Login
+          //               ? Text(
+          //                   'Log In',
+          //                   style: TextStyle(fontWeight: FontWeight.bold),
+          //                 )
+          //               : Text(
+          //                   'Sign Up',
+          //                   style: TextStyle(fontWeight: FontWeight.bold),
+          //                 ),
+          //           onPressed: _submit),
+          // ]),
+          _isLoading
+              ? Center(
+                  child: CircularProgressIndicator(
+                  color: Colors.orange,
+                ))
+              : ElevatedButton(
+                  onPressed: _submit,
+                  child: Text(
+                    _authMode == AuthMode.Login ? 'Log In' : 'Sign up',
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                      elevation: 5,
+                      primary: Colors.orange,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10))),
+                ),
+
           TextButton(
             child: _authMode == AuthMode.Login
                 ? Text(
