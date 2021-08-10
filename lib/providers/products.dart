@@ -7,6 +7,11 @@ import 'product.dart';
 
 //used mixins to allow the class to use ChangeNotifier functionalities
 class Products with ChangeNotifier {
+  
+  final String _authToken;
+  Products(this._authToken, this._items);
+
+
   List<Product> _items = [
     // Product(
     //   id: 'p1',
@@ -122,7 +127,7 @@ class Products with ChangeNotifier {
 
   Future<void> fetchAndSetProducts() async {
     final url = Uri.parse(
-        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products.json');
+        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products.json?auth=$_authToken');
     try {
       final response = await http.get(url);
       //print(json.decode(response.body)); //FireBase return Map<String, Map> for Products where String is the ID
