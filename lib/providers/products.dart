@@ -7,10 +7,9 @@ import 'product.dart';
 
 //used mixins to allow the class to use ChangeNotifier functionalities
 class Products with ChangeNotifier {
-  
-  final String _authToken;
-  Products(this._authToken, this._items);
-
+  String _authToken;
+  String _userId;
+  Products(this._authToken, this._userId, this._items);
 
   List<Product> _items = [
     // Product(
@@ -99,7 +98,7 @@ class Products with ChangeNotifier {
   //explained in lecture 246
   Future<void> addProduct(Product newProduct) async {
     final url = Uri.parse(
-        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products.json');
+        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products.json?auth=$_authToken');
     //returning the whole block because post return future and then also return future
     //in this case Future of the then will be returned once the then block executes and a product is added
     try {
@@ -109,7 +108,7 @@ class Products with ChangeNotifier {
             'price': newProduct.price,
             'description': newProduct.description,
             'imageUrl': newProduct.imageUrl,
-            'isFavorite': newProduct.isFavorite
+            'creatorId': _userId
           }));
       final Product toBeAdded = Product(
           title: newProduct.title,
@@ -125,16 +124,33 @@ class Products with ChangeNotifier {
     }
   }
 
-  Future<void> fetchAndSetProducts() async {
-    final url = Uri.parse(
-        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products.json?auth=$_authToken');
+  //use [] to make a parameter optional with a default value, not {} (named parameter)
+  //this method is used in product overview and user product, in overview we want to see all products
+  //not only user specific product so we pass a bool to see if we need to filter products or not
+  //all filtering happens on the sever not the client
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    final filterString =
+        filterByUser ? 'orderBy="creatorId"&equalTo="$_userId"' : '';
+    //fitter products by creator Id so that users can only edit products they created/own
+    //IMPORTANT!! to be able to filter we need to change firebase rules i.e "products": {".indexOn": ["creatorId"]}  must be added under read and write
+    var url = Uri.parse(
+        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products.json?auth=$_authToken&$filterString');
     try {
-      final response = await http.get(url);
+      var response = await http.get(url);
       //print(json.decode(response.body)); //FireBase return Map<String, Map> for Products where String is the ID
-      final extractedData = json.decode(response.body) as Map<String, dynamic>; //dart does not understand a Map with Map values
+      final extractedData = json.decode(response.body) as Map<String,
+          dynamic>; //dart does not understand a Map with Map values
       final List<Product> loadedProducts = [];
-      if(extractedData == null) return;
-      
+
+      //get user specific favorties using his id
+      url = Uri.parse(
+          'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/userFavorites/$_userId.json?auth=$_authToken');
+      response = await http.get(url);
+      final favoriteData = json.decode(
+          response.body); //Map<String, bool) productId and bool for favorite
+
+      if (extractedData == null) return;
+
       extractedData.forEach((prodId, productData) {
         loadedProducts.add(Product(
             id: prodId,
@@ -142,7 +158,9 @@ class Products with ChangeNotifier {
             imageUrl: productData['imageUrl'],
             price: productData['price'],
             title: productData['title'],
-            isFavorite: productData['isFavorite']));
+            //?? checks if the value before it is null
+            isFavorite:
+                favoriteData == null ? false : favoriteData[prodId] ?? false));
       });
       _items = loadedProducts;
       notifyListeners();
@@ -153,7 +171,7 @@ class Products with ChangeNotifier {
     }
   }
 
-  //the logic is done in Product.dart 
+  //the logic is done in Product.dart
   // Future<void> updateProductFavorite(String id, Product prod) async {
   //   final url = Uri.parse(
   //       'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products/$id.json');
@@ -173,7 +191,7 @@ class Products with ChangeNotifier {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     if (prodIndex >= 0) {
       final url = Uri.parse(
-          'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products/$id.json');
+          'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products/$id.json?auth=$_authToken');
       await http.patch(url,
           body: json.encode({
             'title': newProduct.title,
@@ -190,7 +208,7 @@ class Products with ChangeNotifier {
 
   Future<void> deleteProduct(String id) async {
     final url = Uri.parse(
-        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products/$id.json');
+        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products/$id.json?auth=$_authToken');
     final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
     var existingProduct = _items[
         existingProductIndex]; //remove product from _list but keep a copy of it
@@ -220,5 +238,11 @@ class Products with ChangeNotifier {
       throw HttpException('Failed to delete');
     }
     existingProduct = null;
+  }
+
+  void updateUser(String token, String id) {
+    this._userId = id;
+    this._authToken = token;
+    notifyListeners();
   }
 }

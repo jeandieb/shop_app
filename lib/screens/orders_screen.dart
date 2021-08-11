@@ -42,7 +42,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       appBar: AppBar(
         title: Text('My Orders'),
       ),
-      body: Column(children: [
+      body: ordersData.length <= 0? Center(child: Text('You don\'t have any orders'),) :Column(children: [
         Expanded(
             child: _isLoading
                 ? Center(child: CircularProgressIndicator())

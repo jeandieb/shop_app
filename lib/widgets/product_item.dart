@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_complete_guide/providers/product.dart';
-import 'package:flutter_complete_guide/providers/products.dart';
 import 'package:provider/provider.dart';
 
-import '../screens/product_detail_screen.dart';
+import '../providers/auth.dart';
+import '../providers/product.dart';
+import '../providers/products.dart';
 import '../providers/cart.dart';
+import '../screens/product_detail_screen.dart';
 
 class ProductItem extends StatelessWidget {
   // final String id;
@@ -42,7 +43,9 @@ class ProductItem extends StatelessWidget {
               ),
               onPressed: () async {
                 try {
-                  await product.toggleFavoriteStatus();
+                  await product.toggleFavoriteStatus(
+                      Provider.of<Auth>(context, listen: false).token,
+                      Provider.of<Auth>(context, listen: false).userId);
                   //await Provider.of<Products>(context, listen: false).updateProductFavorite(product.id, product);
                 } catch (error) {
                   scaffoldMessenger.hideCurrentSnackBar();

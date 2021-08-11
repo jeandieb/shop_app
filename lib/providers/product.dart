@@ -21,14 +21,15 @@ class Product with ChangeNotifier {
     this.isFavorite = false,
   });
 
-  Future<void> toggleFavoriteStatus() async {
+  Future<void> toggleFavoriteStatus(String authToken, String userId) async {
     //optimistic update is when we roll back updates locally if remote update failed
     final oldStatus = isFavorite;
     isFavorite = !isFavorite;
     notifyListeners();
     final url = Uri.parse(
-        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/products/$id.json');
-    final response = await http.patch(url, body: json.encode({'isFavorite': isFavorite}));
+        'https://flutter-shop-app-eaa6a-default-rtdb.firebaseio.com/userFavorites/$userId/$id.json?auth=$authToken');
+    //put request instead of patch, and we're sending the value only not a map 
+    final response = await http.put(url, body: json.encode( isFavorite));
     if(response.statusCode >= 400)
     {
       isFavorite = oldStatus;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../providers/auth.dart';
 import '../screens/orders_screen.dart';
 import '../screens/user_products_screen.dart';
 
@@ -37,7 +39,11 @@ class MainDrawer extends StatelessWidget {
               onTap: () => Navigator.pushReplacementNamed(context, '/'),
             ),
           ),
-          Divider(color: Colors.brown, height: 1, thickness: 1,),
+          Divider(
+            color: Colors.brown,
+            height: 1,
+            thickness: 1,
+          ),
           Container(
             color: Theme.of(context).accentColor,
             child: ListTile(
@@ -49,7 +55,11 @@ class MainDrawer extends StatelessWidget {
               onTap: () => Navigator.pushNamed(context, OrdersScreen.routeName),
             ),
           ),
-          Divider(color: Colors.brown, height: 1, thickness: 1,),
+          Divider(
+            color: Colors.brown,
+            height: 1,
+            thickness: 1,
+          ),
           Container(
             color: Theme.of(context).accentColor,
             child: ListTile(
@@ -58,7 +68,28 @@ class MainDrawer extends StatelessWidget {
                 size: 30,
               ),
               title: Text('MANAGE PRODUCTS'),
-              onTap: () => Navigator.pushNamed(context, UserProductsScreen.routeName),
+              onTap: () =>
+                  Navigator.pushNamed(context, UserProductsScreen.routeName),
+            ),
+          ),
+          Divider(
+            color: Colors.brown,
+            height: 1,
+            thickness: 1,
+          ),
+          Container(
+            color: Theme.of(context).accentColor,
+            child: ListTile(
+              leading: Icon(
+                Icons.exit_to_app,
+                size: 30,
+              ),
+              title: Text('Log Out'),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushReplacementNamed('/');
+                Provider.of<Auth>(context, listen: false).logout();
+              },
             ),
           ),
         ],
