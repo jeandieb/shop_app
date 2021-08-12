@@ -67,22 +67,7 @@ class AuthScreen extends StatelessWidget {
                       )),
                     ),
                   ),
-                  Flexible(
-                    flex: 6,
-                    child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            width: 2,
-                          ),
-                        ),
-                        margin: EdgeInsets.all(20),
-                        padding: EdgeInsets.all(20),
-                        width: deviceSize.width * 0.7,
-                        height: deviceSize.height * 0.6,
-                        //color: Colors.green,
-                        child: AuthCard()),
-                  )
+                  Flexible(flex: 6, child: AuthCard())
                 ],
               ),
             ),
@@ -98,22 +83,77 @@ class AuthCard extends StatefulWidget {
   _AuthCardState createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard> {
+class _AuthCardState extends State<AuthCard>
+    with SingleTickerProviderStateMixin {
   Map<String, String> _authData = {'email': '', 'password': ''};
   AuthMode _authMode = AuthMode.Login;
+
   bool _isLoading = false;
   final GlobalKey<FormState> _formKey = GlobalKey();
   final _passwordController = TextEditingController();
 
+  AnimationController _controller;
+  Animation<Size> _heightAnimation;
+
+  // Future<Size> get getDeviceSize async {
+  //   return await Future.delayed(Duration.zero, () {
+  //     return MediaQuery.of(context).size;
+  //   });
+  // }
+
+  //add animation
+  @override
+  void initState() {
+    super.initState();
+    //COULD NOT MAKE IT WORK TO USE DEVICE SIZE FOR HEIGHT...
+    // Size deviceSize;
+    // getDeviceSize
+    //     .then((extractedSize) => deviceSize = extractedSize)
+    //     .then((value) {
+    //   print('device size is found =  $deviceSize');
+    //   _controller = AnimationController(
+    //     vsync: this,
+    //     duration: Duration(milliseconds: 300),
+    //   );
+    //   print('device size before calling .height = $deviceSize');
+    //   _heightAnimation = Tween<Size>(
+    //       begin: Size(double.infinity, deviceSize.height * 0.48),
+    //       end: Size(double.infinity, deviceSize.height * 0.6))
+    //       .animate(
+    //     CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn),
+    //   );
+    //   _heightAnimation.addListener(() => setState(() {}));
+    // });
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+    _heightAnimation = Tween<Size>(
+            begin: Size(double.infinity, 280), end: Size(double.infinity, 340))
+        .animate(
+      CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn),
+    );
+    // _heightAnimation.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+  }
+
   void _switchAuthMode() {
-    if (_authMode == AuthMode.Login)
+    if (_authMode == AuthMode.Login) {
       setState(() {
         _authMode = AuthMode.Signup;
       });
-    else {
+      _controller.forward();
+    } else {
       setState(() {
         _authMode = AuthMode.Login;
       });
+      _controller.reverse();
     }
   }
 
@@ -123,9 +163,13 @@ class _AuthCardState extends State<AuthCard> {
         builder: (ctx) => AlertDialog(
               title: Text('An Error Occurred..'),
               content: Text(errorMessage),
-              actions: [TextButton(onPressed: (){
-                Navigator.of(context).pop();
-              }, child: Text('Okay'))],
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Okay'))
+              ],
             ));
   }
 
@@ -159,7 +203,6 @@ class _AuthCardState extends State<AuthCard> {
       if (error.toString().contains('INVALID_PASSWORD'))
         errorMessage = 'Wrong password';
       _showErrorDialog(errorMessage);
-
     } catch (error) {
       const errorMessage =
           'Could not authenticate you. Please try again later.';
@@ -172,125 +215,144 @@ class _AuthCardState extends State<AuthCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: SingleChildScrollView(
-          child: Column(
-        children: [
-          Container(
-            margin: EdgeInsets.symmetric(vertical: 15),
-            child: TextFormField(
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (!value.contains('@')) return 'Invalid email address';
-                  return null;
-                },
-                decoration: InputDecoration(labelText: 'Email'),
-                onSaved: (value) {
-                  _authData['email'] = value;
-                }),
-          ),
-          Container(
-            margin: EdgeInsets.only(top: 15, bottom: 15),
-            child: TextFormField(
-              controller: _passwordController,
-              validator: (value) {
-                if (value == null || value.length < 5) {
-                  return 'choose a longer password';
-                }
-                return null;
-              },
-              decoration: InputDecoration(
-                labelText: 'Password',
-              ),
-              obscureText: true,
-              onSaved: (value) {
-                _authData['password'] = value;
-              },
-            ),
-          ),
-          if (_authMode == AuthMode.Signup)
-            Container(
-              margin: EdgeInsets.only(top: 15, bottom: 50),
-              child: TextFormField(
-                enabled: _authMode == AuthMode.Signup,
-                decoration: InputDecoration(labelText: 'Confirm password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value != _passwordController.text)
-                    return 'password does not match';
-                  return null;
-                },
+    final deviceSize = MediaQuery.of(context).size;
+    return AnimatedBuilder(
+        animation: _heightAnimation,
+        builder: (ctx, ch) => Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                width: 2,
               ),
             ),
-          // Stack(children: [
-          //   Positioned.fill(
-          //    child:
-          //     Container(
-          //       width: 200, height: 50,
-          //       decoration: BoxDecoration(border: Border.all(),
-          //           borderRadius: BorderRadius.circular(10),
-          //           boxShadow: [
-          //             BoxShadow(
-          //                 color: Colors.black.withOpacity(0.5),
-          //                 spreadRadius: 1,
-          //                 blurRadius: 6,
-          //                 offset: Offset(5, 8))
-          //           ],
-          //           color: Colors.orange,
-          //           shape: BoxShape.rectangle),
-          //     ),
-          //  ),
-          //   _isLoading
-          //       ? Center(child: CircularProgressIndicator())
-          //       : TextButton(
-          //           //style: ButtonStyle(backgroundColor: Colors.deepOrange),
-          //           child: _authMode == AuthMode.Login
-          //               ? Text(
-          //                   'Log In',
-          //                   style: TextStyle(fontWeight: FontWeight.bold),
-          //                 )
-          //               : Text(
-          //                   'Sign Up',
-          //                   style: TextStyle(fontWeight: FontWeight.bold),
-          //                 ),
-          //           onPressed: _submit),
-          // ]),
-          _isLoading
-              ? Center(
-                  child: CircularProgressIndicator(
-                  color: Colors.orange,
-                ))
-              : ElevatedButton(
-                  onPressed: _submit,
-                  child: Text(
-                    _authMode == AuthMode.Login ? 'Log In' : 'Sign up',
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold),
+            margin: EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
+            width: deviceSize.width * 0.7,
+            height: _heightAnimation.value.height,
+            // height: _authMode == AuthMode.Signup
+            //     ? deviceSize.height * 0.6
+            //     : deviceSize.height * 0.48,
+            //color: Colors.green,
+            child: ch),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+              child: Column(
+            children: [
+              Container(
+                margin: EdgeInsets.only(top: 0, bottom: 15),
+                child: TextFormField(
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (!value.contains('@')) return 'Invalid email address';
+                      return null;
+                    },
+                    decoration: InputDecoration(labelText: 'Email'),
+                    onSaved: (value) {
+                      _authData['email'] = value;
+                    }),
+              ),
+              Container(
+                margin: EdgeInsets.only(top: 15, bottom: 15),
+                child: TextFormField(
+                  controller: _passwordController,
+                  validator: (value) {
+                    if (value == null || value.length < 5) {
+                      return 'choose a longer password';
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Password',
                   ),
-                  style: ElevatedButton.styleFrom(
-                      elevation: 5,
-                      primary: Colors.orange,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10))),
+                  obscureText: true,
+                  onSaved: (value) {
+                    _authData['password'] = value;
+                  },
                 ),
-
-          TextButton(
-            child: _authMode == AuthMode.Login
-                ? Text(
-                    'Sign Up',
-                    style: TextStyle(color: Colors.white54),
-                  )
-                : Text(
-                    'Log In',
-                    style: TextStyle(color: Colors.white54),
+              ),
+              if (_authMode == AuthMode.Signup)
+                Container(
+                  margin: EdgeInsets.only(top: 15, bottom: 20),
+                  child: TextFormField(
+                    enabled: _authMode == AuthMode.Signup,
+                    decoration: InputDecoration(labelText: 'Confirm password'),
+                    obscureText: true,
+                    validator: (value) {
+                      if (value != _passwordController.text)
+                        return 'password does not match';
+                      return null;
+                    },
                   ),
-            onPressed: _switchAuthMode,
-          )
-        ],
-      )),
-    );
+                ),
+              // Stack(children: [
+              //   Positioned.fill(
+              //    child:
+              //     Container(
+              //       width: 200, height: 50,
+              //       decoration: BoxDecoration(border: Border.all(),
+              //           borderRadius: BorderRadius.circular(10),
+              //           boxShadow: [
+              //             BoxShadow(
+              //                 color: Colors.black.withOpacity(0.5),
+              //                 spreadRadius: 1,
+              //                 blurRadius: 6,
+              //                 offset: Offset(5, 8))
+              //           ],
+              //           color: Colors.orange,
+              //           shape: BoxShape.rectangle),
+              //     ),
+              //  ),
+              //   _isLoading
+              //       ? Center(child: CircularProgressIndicator())
+              //       : TextButton(
+              //           //style: ButtonStyle(backgroundColor: Colors.deepOrange),
+              //           child: _authMode == AuthMode.Login
+              //               ? Text(
+              //                   'Log In',
+              //                   style: TextStyle(fontWeight: FontWeight.bold),
+              //                 )
+              //               : Text(
+              //                   'Sign Up',
+              //                   style: TextStyle(fontWeight: FontWeight.bold),
+              //                 ),
+              //           onPressed: _submit),
+              // ]),
+              _isLoading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                      color: Colors.orange,
+                    ))
+                  : ElevatedButton(
+                      onPressed: _submit,
+                      child: Text(
+                        _authMode == AuthMode.Login ? 'Log In' : 'Sign up',
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                          elevation: 5,
+                          primary: Colors.orange,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                    ),
+
+              TextButton(
+                child: _authMode == AuthMode.Login
+                    ? Text(
+                        'Sign Up',
+                        style: TextStyle(color: Colors.white54),
+                      )
+                    : Text(
+                        'Log In',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                onPressed: _switchAuthMode,
+              )
+            ],
+          )),
+        ));
   }
 }
