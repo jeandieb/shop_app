@@ -93,7 +93,10 @@ class _AuthCardState extends State<AuthCard>
   final _passwordController = TextEditingController();
 
   AnimationController _controller;
-  Animation<Size> _heightAnimation;
+  //Animation<Size> _heightAnimation;
+  Animation<Offset> _slideAnimation;
+  Animation<double> _opacityAnimation;
+
 
   // Future<Size> get getDeviceSize async {
   //   return await Future.delayed(Duration.zero, () {
@@ -129,11 +132,16 @@ class _AuthCardState extends State<AuthCard>
       vsync: this,
       duration: Duration(milliseconds: 300),
     );
-    _heightAnimation = Tween<Size>(
-            begin: Size(double.infinity, 280), end: Size(double.infinity, 340))
-        .animate(
+    // _heightAnimation = Tween<Size>(
+    //         begin: Size(double.infinity, 340), end: Size(double.infinity, 280))
+    _slideAnimation =
+        Tween<Offset>(begin: Offset(0, -1.5), end: Offset(0, 0)).animate(
       CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn),
     );
+
+    _opacityAnimation = Tween(begin: 0.0, end: 1.0)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+
     // _heightAnimation.addListener(() => setState(() {}));
   }
 
@@ -216,24 +224,30 @@ class _AuthCardState extends State<AuthCard>
   @override
   Widget build(BuildContext context) {
     final deviceSize = MediaQuery.of(context).size;
-    return AnimatedBuilder(
-        animation: _heightAnimation,
-        builder: (ctx, ch) => Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                width: 2,
-              ),
-            ),
-            margin: EdgeInsets.all(20),
-            padding: EdgeInsets.all(20),
-            width: deviceSize.width * 0.7,
-            height: _heightAnimation.value.height,
-            // height: _authMode == AuthMode.Signup
-            //     ? deviceSize.height * 0.6
-            //     : deviceSize.height * 0.48,
-            //color: Colors.green,
-            child: ch),
+
+    //AnimatedBuilder works for the general case but here we Widget specifically for our case(Container)
+    // return AnimatedBuilder(
+    //     animation: _heightAnimation,
+    //     builder: (ctx, ch) => Container(
+    return AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeIn,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            width: 2,
+          ),
+        ),
+        margin: EdgeInsets.all(20),
+        padding: EdgeInsets.all(20),
+        width: deviceSize.width * 0.7,
+        //height: _heightAnimation.value.height,
+        height: _authMode == AuthMode.Signup
+            ? deviceSize.height * 0.6
+            : deviceSize.height * 0.48,
+        //color: Colors.green,
+        //child: ch
+
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -271,20 +285,32 @@ class _AuthCardState extends State<AuthCard>
                   },
                 ),
               ),
-              if (_authMode == AuthMode.Signup)
-                Container(
-                  margin: EdgeInsets.only(top: 15, bottom: 20),
-                  child: TextFormField(
-                    enabled: _authMode == AuthMode.Signup,
-                    decoration: InputDecoration(labelText: 'Confirm password'),
-                    obscureText: true,
-                    validator: (value) {
-                      if (value != _passwordController.text)
-                        return 'password does not match';
-                      return null;
-                    },
+              // if (_authMode == AuthMode.Signup)
+              AnimatedContainer(
+                height: _authMode == AuthMode.Login? 0: 90,
+                duration: Duration(milliseconds: 300),
+                curve: Curves.easeIn,
+                child: FadeTransition(
+                  opacity: _opacityAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Container(
+                      margin: EdgeInsets.only(top: 15, bottom: 20),
+                      child: TextFormField(
+                        enabled: _authMode == AuthMode.Signup,
+                        decoration:
+                            InputDecoration(labelText: 'Confirm password'),
+                        obscureText: true,
+                        validator: (value) {
+                          if (value != _passwordController.text)
+                            return 'password does not match';
+                          return null;
+                        },
+                      ),
+                    ),
                   ),
                 ),
+              ),
               // Stack(children: [
               //   Positioned.fill(
               //    child:
