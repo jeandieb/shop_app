@@ -285,7 +285,7 @@ class _AuthCardState extends State<AuthCard>
                   },
                 ),
               ),
-              // if (_authMode == AuthMode.Signup)
+              if (_authMode == AuthMode.Signup)
               AnimatedContainer(
                 height: _authMode == AuthMode.Login? 0: 90,
                 duration: Duration(milliseconds: 300),
