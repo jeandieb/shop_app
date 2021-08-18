@@ -25,6 +25,15 @@ Users also have the option to undo adding to shopping cart
 <img src = "screenshots/undoOption.png" width = "300">
 <br> 
 <br>
+When an Item is pressed we navigate to the product details screen<br>
+the image replaces the app bar initially but when scorll down the image<br>
+shrinks and turn into the app bar (SliverAppBar)
+<br>
+<br>
+<img src = "screenshots/productDetailsScreen.png" width = "300">
+<img src = "screenshots/productDetails_scrolled.png" width = "300">
+<br> 
+<br>
 In the shopping cart, users are allowed to place orders and swipe to remove items <bs>they no longer want to purchase.
 <br>
 <br>
