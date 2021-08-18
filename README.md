@@ -3,7 +3,7 @@
 A Cross Platform application built using Flutter/Dart for the front-end<br>
 and FireBase for the back-end to store user's data and authentication<br>
 users are authenticated using a token that expires after a fixed amount<br> of time
-for security, and users are kept logged in after app restart or<br>termination while the token is valid and the user did not log out, 
+for security, and users are kept logged in after app restart or<br>termination while the token is valid and the user did not log out
 
 # APP DEMO 
 
