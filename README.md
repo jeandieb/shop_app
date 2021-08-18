@@ -1,7 +1,7 @@
 # shop_app
 
 A Cross Platform application built using Flutter/Dart for the front-end<br>
-and FireBase for the back-end to store user's data and authentication
+and FireBase for the back-end to store user's data and authentication<br>
 users are authenticated using a token that expires after a fixed amount of time<br>
 for security, and users are kept logged in after app restart or termination while the token is valid and the user did not <br>log out, 
 
